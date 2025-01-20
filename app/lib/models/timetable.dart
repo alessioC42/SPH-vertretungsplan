@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class TimetableSubject {
+  // The ID is not nullable, to support legacy data where the ID was not present
+  String? id;
   String? name;
   String? raum;
   String? lehrer;
@@ -10,21 +12,23 @@ class TimetableSubject {
   TimeOfDay endTime;
 
   TimetableSubject(
-      {required this.name,
-        required this.raum,
-        required this.lehrer,
-        required this.badge,
-        required this.duration,
-        required this.startTime,
-        required this.endTime});
+      {required this.id,
+      required this.name,
+      required this.raum,
+      required this.lehrer,
+      required this.badge,
+      required this.duration,
+      required this.startTime,
+      required this.endTime});
 
   @override
   String toString() {
-    return "(Fach: $name, Raum: $raum, Lehrer: $lehrer, Badge: $badge, Dauer: $duration (${startTime.hour}:${startTime.minute}-${endTime.hour}:${endTime.minute}))";
+    return "(Id: $id, Fach: $name, Raum: $raum, Lehrer: $lehrer, Badge: $badge, Dauer: $duration (${startTime.hour}:${startTime.minute}-${endTime.hour}:${endTime.minute}))";
   }
 
   Map<String, dynamic> toJson() {
     return {
+      "id": id,
       "name": name,
       "raum": raum,
       "lehrer": lehrer,
@@ -37,20 +41,23 @@ class TimetableSubject {
 
   factory TimetableSubject.fromJson(Map<String, dynamic> json) {
     return TimetableSubject(
+        id: json["id"],
         name: json["name"],
         raum: json["raum"],
         lehrer: json["lehrer"],
         badge: json["badge"],
         duration: json["duration"],
-        startTime: TimeOfDay(hour: json["startTime"][0],minute: json["startTime"][1]),
-        endTime: TimeOfDay(hour: json["endTime"][0],minute:  json["endTime"][1])
-    );
+        startTime:
+            TimeOfDay(hour: json["startTime"][0], minute: json["startTime"][1]),
+        endTime:
+            TimeOfDay(hour: json["endTime"][0], minute: json["endTime"][1]));
   }
 
   @override
   bool operator ==(Object other) {
     if (other is TimetableSubject) {
-      return name == other.name &&
+      return id == other.id &&
+          name == other.name &&
           raum == other.raum &&
           lehrer == other.lehrer &&
           badge == other.badge &&
@@ -77,13 +84,15 @@ class TimeTable {
   TimeTable.fromJson(Map<String, dynamic> json) {
     planForAll = (json['planForAll'] as List?)
         ?.map((day) => (day as List)
-        .map((fach) => TimetableSubject.fromJson(fach as Map<String, dynamic>))
-        .toList())
+            .map((fach) =>
+                TimetableSubject.fromJson(fach as Map<String, dynamic>))
+            .toList())
         .toList();
     planForOwn = (json['planForOwn'] as List?)
         ?.map((day) => (day as List)
-        .map((fach) => TimetableSubject.fromJson(fach as Map<String, dynamic>))
-        .toList())
+            .map((fach) =>
+                TimetableSubject.fromJson(fach as Map<String, dynamic>))
+            .toList())
         .toList();
     weekBadge = json['weekBadge'];
   }

@@ -16,9 +16,12 @@ class TimetableStudentParser extends AppletParser<TimeTable> {
     final Document? document = await getTimetableDocument();
     if (document == null) throw NetworkException();
 
-    final tbodyAll = await getTableBody(document, timeTableType: TimeTableType.all);
-    final tbodyOwn = await getTableBody(document, timeTableType: TimeTableType.own);
-    final String? weekBadge = document.querySelector("#aktuelleWoche")?.text.trim();
+    final tbodyAll =
+        await getTableBody(document, timeTableType: TimeTableType.all);
+    final tbodyOwn =
+        await getTableBody(document, timeTableType: TimeTableType.own);
+    final String? weekBadge =
+        document.querySelector("#aktuelleWoche")?.text.trim();
     final parsedAll = parseRoomPlan(tbodyAll!);
     final parsedOwn = parseRoomPlan(tbodyOwn!);
 
@@ -35,8 +38,8 @@ class TimetableStudentParser extends AppletParser<TimeTable> {
   }
 
   Future<Document?> getTimetableDocument() async {
-    final redirectedRequest =
-    await sph.session.dio.get("https://start.schulportal.hessen.de/stundenplan.php");
+    final redirectedRequest = await sph.session.dio
+        .get("https://start.schulportal.hessen.de/stundenplan.php");
 
     if (redirectedRequest.headers["location"] == null) {
       return null;
@@ -47,7 +50,8 @@ class TimetableStudentParser extends AppletParser<TimeTable> {
     return parse(response.data);
   }
 
-  Future<Element?> getTableBody(Document document, {TimeTableType timeTableType = TimeTableType.all}) async {
+  Future<Element?> getTableBody(Document document,
+      {TimeTableType timeTableType = TimeTableType.all}) async {
     switch (timeTableType) {
       case TimeTableType.all:
         return document.querySelector("#all tbody");
@@ -61,21 +65,22 @@ class TimetableStudentParser extends AppletParser<TimeTable> {
     List<TimetableDay> result = List.generate(dayCount, (_) => []);
 
     List<(TimeOfDay, TimeOfDay)> timeSlots =
-    tbody.querySelectorAll(".VonBis").map((e) {
+        tbody.querySelectorAll(".VonBis").map((e) {
       var timeString = e.text.trim();
       var s = timeString.split(" - ");
       var splitA = s[0].split(":");
       var splitB = s[1].split(":");
       return (
-      TimeOfDay(hour: int.parse(splitA[0]), minute: int.parse(splitA[1])),
-      TimeOfDay(hour: int.parse(splitB[0]), minute: int.parse(splitB[1]))
+        TimeOfDay(hour: int.parse(splitA[0]), minute: int.parse(splitA[1])),
+        TimeOfDay(hour: int.parse(splitB[0]), minute: int.parse(splitB[1]))
       );
     }).toList();
 
     List<List<bool>> alreadyParsed = List.generate(
         timeSlots.length + 1, (_) => List.generate(dayCount, (_) => false));
 
-    bool timeslotOffsetFirstRow = tbody.children[0].children[0].text.trim() != "";
+    bool timeslotOffsetFirstRow =
+        tbody.children[0].children[0].text.trim() != "";
 
     for (var (rowIndex, rowElement) in tbody.children.indexed) {
       if (rowIndex == 0) continue; // skip first empty row
@@ -93,15 +98,15 @@ class TimetableStudentParser extends AppletParser<TimeTable> {
           alreadyParsed[rowIndex + i][actualDay] = true;
         }
 
-        result[actualDay]
-            .addAll(parseSingeHour(colElement, rowIndex, timeSlots, timeslotOffsetFirstRow));
+        result[actualDay].addAll(parseSingeHour(
+            colElement, rowIndex, timeSlots, timeslotOffsetFirstRow));
       }
     }
     return result;
   }
 
-  List<TimetableSubject> parseSingeHour(
-      Element cell, int y, List<(TimeOfDay, TimeOfDay)> timeSlots, bool timeslotOffsetFirstRow) {
+  List<TimetableSubject> parseSingeHour(Element cell, int y,
+      List<(TimeOfDay, TimeOfDay)> timeSlots, bool timeslotOffsetFirstRow) {
     List<TimetableSubject> result = [];
     for (var row in cell.querySelectorAll(".stunde")) {
       var name = row.querySelector("b")?.text.trim();
@@ -111,10 +116,17 @@ class TimetableStudentParser extends AppletParser<TimeTable> {
       var lehrer = row.querySelector("small")?.text.trim();
       var badge = row.querySelector(".badge")?.text.trim();
       var duration = int.parse(row.parent!.attributes["rowspan"]!);
-      var startTime = timeslotOffsetFirstRow ? timeSlots[y].$1 : timeSlots[y - 1].$1;
-      var endTime = timeslotOffsetFirstRow ? timeSlots[y + duration - 1].$2 : timeSlots[y - 1 + duration - 1].$2;
+      var startTime =
+          timeslotOffsetFirstRow ? timeSlots[y].$1 : timeSlots[y - 1].$1;
+      var endTime = timeslotOffsetFirstRow
+          ? timeSlots[y + duration - 1].$2
+          : timeSlots[y - 1 + duration - 1].$2;
+      // Id unique for every subject. Added with startTime to make it unique
+      // even if lessons are removed.
+      var id = row.attributes['data-mix'];
 
       result.add(TimetableSubject(
+          id: '$id-${startTime.hour}-${startTime.minute}',
           name: name,
           raum: raum,
           lehrer: lehrer,
