@@ -1,7 +1,7 @@
 // Shared classes and functions between the conversation screens.
 
-import 'package:flutter/material.dart';
 import 'package:color_hash/color_hash.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_chat_bubble/bubble_type.dart';
 import 'package:flutter_chat_bubble/clippers/chat_bubble_clipper_1.dart';
 
@@ -254,7 +254,7 @@ class BubbleStyle {
 }
 
 void showSnackbar(final BuildContext context, final String text,
-    {seconds = 1, milliseconds = 0}) {
+    {seconds = 1, milliseconds = 0, final SnackBarAction? action}) {
   if (context.mounted) {
     // Hide the current SnackBar if one is already visible.
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -263,6 +263,7 @@ void showSnackbar(final BuildContext context, final String text,
       SnackBar(
         content: Text(text),
         duration: Duration(seconds: seconds, milliseconds: milliseconds),
+        action: action,
       ),
     );
   }

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
-import 'package:sph_plan/generated/l10n.dart';
 import 'package:sph_plan/applets/conversations/view/shared.dart';
 import 'package:sph_plan/applets/timetable/definition.dart';
+import 'package:sph_plan/generated/l10n.dart';
 import 'package:sph_plan/models/account_types.dart';
+import 'package:sph_plan/utils/extensions.dart';
 import 'package:sph_plan/utils/random_color.dart';
 import 'package:sph_plan/widgets/combined_applet_builder.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
@@ -42,7 +43,7 @@ class _StudentTimetableViewState extends State<StudentTimetableView> {
       Map<String, dynamic> settings) {
     List<List<TimetableSubject>>? customLessons =
         TimeTableHelper.getCustomLessons(settings);
-    if (selectedType == TimeTableType.own) {
+    if (selectedType == TimeTableType.own && data.planForOwn != null) {
       return TimeTableHelper.mergeByIndices(data.planForOwn!, customLessons);
     }
     return TimeTableHelper.mergeByIndices(data.planForAll!, customLessons);
@@ -97,7 +98,7 @@ class _StudentTimetableViewState extends State<StudentTimetableView> {
                 updateSettings('lesson-colors', {
                   ...settings['lesson-colors'],
                   lesson.id.split('-')[0]:
-                    selectedColor.toHexString(enableAlpha: false)
+                      selectedColor.toHexString(enableAlpha: false)
                 });
               },
             ),
@@ -154,6 +155,12 @@ class _StudentTimetableViewState extends State<StudentTimetableView> {
           String() => throw UnimplementedError(),
         };
 
+        TimeTableDataSource source = TimeTableDataSource(
+            context,
+            selectedPlan,
+            currentWeekIndex == 0 ? null : uniqueBadges[currentWeekIndex - 1],
+            settings);
+
         return Scaffold(
             appBar: AppBar(
               title: Text(timeTableDefinition.label(context)),
@@ -178,17 +185,14 @@ class _StudentTimetableViewState extends State<StudentTimetableView> {
                     CalendarView.week,
                     CalendarView.workWeek,
                   ],
-                  timeSlotViewSettings: const TimeSlotViewSettings(
-                    timeFormat: "HH:mm",
-                  ),
+                  timeSlotViewSettings: TimeSlotViewSettings(
+                      timeFormat: "HH:mm",
+                      startHour: source.earliestHour.floor().toTimeDouble(),
+                      endHour: source.latestHour.ceil().toTimeDouble(),
+                      timeInterval: Duration(minutes: 30),
+                      timeIntervalHeight: 30),
                   firstDayOfWeek: DateTime.monday,
-                  dataSource: TimeTableDataSource(
-                      context,
-                      selectedPlan,
-                      currentWeekIndex == 0
-                          ? null
-                          : uniqueBadges[currentWeekIndex - 1],
-                      settings),
+                  dataSource: source,
                   minDate: DateTime.now(),
                   maxDate: DateTime.now().add(const Duration(days: 7)),
                   controller: controller,
@@ -263,6 +267,7 @@ class _StudentTimetableViewState extends State<StudentTimetableView> {
                                                             'hidden-lessons'],
                                                         selected.id
                                                       ]);
+
                                                       showSnackbar(
                                                           context,
                                                           AppLocalizations.of(
@@ -270,7 +275,22 @@ class _StudentTimetableViewState extends State<StudentTimetableView> {
                                                               .lessonHidden(
                                                                   selected
                                                                       .name!),
-                                                          seconds: 3);
+                                                          seconds: 5,
+                                                          action:
+                                                              SnackBarAction(
+                                                                  label: AppLocalizations.of(
+                                                                          context)
+                                                                      .undo,
+                                                                  onPressed:
+                                                                      () {
+                                                                    updateSettings(
+                                                                        'hidden-lessons',
+                                                                        settings['hidden-lessons']
+                                                                            .where((element) =>
+                                                                                element !=
+                                                                                selected.id)
+                                                                            .toList());
+                                                                  }));
                                                     },
                                                     icon: const Icon(Icons
                                                         .visibility_off_outlined)),
@@ -368,23 +388,25 @@ class _StudentTimetableViewState extends State<StudentTimetableView> {
                     onPressed: refresh,
                     child: const Icon(Icons.refresh),
                   ),
-                const SizedBox(height: 8),
-                FloatingActionButton(
-                  heroTag: "toggle",
-                  tooltip: selectedType == TimeTableType.all
-                      ? AppLocalizations.of(context).timetableSwitchToPersonal
-                      : AppLocalizations.of(context).timetableSwitchToClass,
-                  onPressed: () {
-                    updateSettings(
-                        'student-selected-type',
-                        selectedType == TimeTableType.all
-                            ? 'TimeTableType.own'
-                            : 'TimeTableType.all');
-                  },
-                  child: Icon(selectedType == TimeTableType.all
-                      ? Icons.person
-                      : Icons.people),
-                ),
+                if(timetable.planForOwn != null) ...[
+                  const SizedBox(height: 8),
+                  FloatingActionButton(
+                    heroTag: "toggle",
+                    tooltip: selectedType == TimeTableType.all
+                        ? AppLocalizations.of(context).timetableSwitchToPersonal
+                        : AppLocalizations.of(context).timetableSwitchToClass,
+                    onPressed: () {
+                      updateSettings(
+                          'student-selected-type',
+                          selectedType == TimeTableType.all
+                              ? 'TimeTableType.own'
+                              : 'TimeTableType.all');
+                    },
+                    child: Icon(selectedType == TimeTableType.all
+                        ? Icons.person
+                        : Icons.people),
+                  ),
+                ]
               ],
             ));
       },
@@ -440,6 +462,9 @@ class TimeTableHelper {
 
 class TimeTableDataSource extends CalendarDataSource {
   BuildContext context;
+  TimeOfDay earliestHour = const TimeOfDay(hour: 23, minute: 59);
+  TimeOfDay latestHour = const TimeOfDay(hour: 0, minute: 0);
+
   TimeTableDataSource(
       this.context, List<TimetableDay>? data, String? weekBadge, settings) {
     final now = DateTime.now();
@@ -474,6 +499,13 @@ class TimeTableDataSource extends CalendarDataSource {
 
         final Color entryColor =
             TimeTableHelper.getColorForLesson(settings, lesson);
+
+        if (lesson.startTime < earliestHour) {
+          earliestHour = lesson.startTime;
+        }
+        if (lesson.endTime > latestHour) {
+          latestHour = lesson.endTime;
+        }
 
         //1 week before
         events.add(Appointment(

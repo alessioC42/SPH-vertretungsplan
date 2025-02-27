@@ -273,5 +273,6 @@
   "noConnection": "Keine SPH-Verbindung",
   "accountExists": "Account existiert bereits",
   "errorOccurredDetails": "Problem: {problem}",
-  "copyErrorToClipboard": "Fehler in die Zwischenablage kopieren"
+  "copyErrorToClipboard": "Fehler in die Zwischenablage kopieren",
+  "undo": "Rückgängig"
 }

@@ -5,6 +5,7 @@ import 'package:html/dom.dart';
 import 'package:html/parser.dart';
 import 'package:sph_plan/core/applet_parser.dart';
 import 'package:sph_plan/models/client_status_exceptions.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../models/timetable.dart';
 
@@ -22,8 +23,8 @@ class TimetableStudentParser extends AppletParser<TimeTable> {
         await getTableBody(document, timeTableType: TimeTableType.own);
     final String? weekBadge =
         document.querySelector("#aktuelleWoche")?.text.trim();
-    final parsedAll = parseRoomPlan(tbodyAll!);
-    final parsedOwn = parseRoomPlan(tbodyOwn!);
+    final List<TimetableDay> parsedAll = parseRoomPlan(tbodyAll!);
+    final List<TimetableDay>? parsedOwn = tbodyOwn == null ? null : parseRoomPlan(tbodyOwn);
 
     return TimeTable(
       planForAll: parsedAll,
@@ -128,6 +129,10 @@ class TimetableStudentParser extends AppletParser<TimeTable> {
       // Id unique for every subject. Added with startTime to make it unique
       // even if lessons are removed.
       var id = row.attributes['data-mix'];
+      if (id == null || id.isEmpty) {
+        // Convert name to a reproducible unique id
+        id = Uuid().v5(Uuid.NAMESPACE_URL, name ?? raum).replaceAll('-', '');
+      }
 
       result.add(TimetableSubject(
           id: '$id-$day-${startTime.hour}-${startTime.minute}',
