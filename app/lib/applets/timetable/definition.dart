@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sph_plan/applets/definitions.dart';
+import 'package:sph_plan/applets/timetable/student/student_timetable_better_view.dart';
 import 'package:sph_plan/generated/l10n.dart';
-import 'package:sph_plan/applets/timetable/student/student_timetable_view.dart';
 
 import '../../models/account_types.dart';
 
@@ -21,7 +21,7 @@ final timeTableDefinition = AppletDefinition(
   },
   bodyBuilder: (context, accountType, openDrawerCb) {
     if (accountType == AccountType.student) {
-      return StudentTimetableView(openDrawerCb: openDrawerCb);
+      return StudentTimetableBetterView(openDrawerCb: openDrawerCb);
     } else {
       return Placeholder();
     }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sph_plan/applets/timetable/student/student_timetable_better_view.dart';
 
 class TimetableSubject {
   // The ID is not nullable, to support legacy data where the ID was not present
@@ -10,6 +11,8 @@ class TimetableSubject {
   int duration;
   TimeOfDay startTime;
   TimeOfDay endTime;
+  // Row index in the timetable
+  int? stunde;
 
   TimetableSubject(
       {required this.id,
@@ -19,7 +22,8 @@ class TimetableSubject {
       required this.badge,
       required this.duration,
       required this.startTime,
-      required this.endTime});
+      required this.endTime,
+      required this.stunde});
 
   @override
   String toString() {
@@ -36,6 +40,7 @@ class TimetableSubject {
       "duration": duration,
       "startTime": [startTime.hour, startTime.minute],
       "endTime": [endTime.hour, endTime.minute],
+      "stunde": stunde
     };
   }
 
@@ -47,6 +52,7 @@ class TimetableSubject {
         lehrer: json["lehrer"],
         badge: json["badge"],
         duration: json["duration"],
+        stunde: json["stunde"],
         startTime:
             TimeOfDay(hour: json["startTime"][0], minute: json["startTime"][1]),
         endTime:
@@ -63,6 +69,7 @@ class TimetableSubject {
           lehrer == other.lehrer &&
           badge == other.badge &&
           duration == other.duration &&
+          stunde == other.stunde &&
           startTime == other.startTime &&
           endTime == other.endTime;
     }
@@ -77,9 +84,10 @@ enum TimeTableType { all, own }
 class TimeTable {
   List<TimetableDay>? planForAll;
   List<TimetableDay>? planForOwn;
+  List<TimeTableRow>? hours;
   String? weekBadge;
 
-  TimeTable({this.planForAll, this.planForOwn, this.weekBadge});
+  TimeTable({this.planForAll, this.planForOwn, this.weekBadge, this.hours});
 
   // JSON operations
   TimeTable.fromJson(Map<String, dynamic> json) {
@@ -95,6 +103,9 @@ class TimeTable {
                 TimetableSubject.fromJson(fach as Map<String, dynamic>))
             .toList())
         .toList();
+    hours = (json['hours'] as List?)
+        ?.map((hour) => TimeTableRow.fromJson(hour as Map<String, dynamic>))
+        .toList();
     weekBadge = json['weekBadge'];
   }
 
@@ -106,6 +117,7 @@ class TimeTable {
     data['planForOwn'] = planForOwn
         ?.map((day) => day.map((fach) => fach.toJson()).toList())
         .toList();
+    data['hours'] = hours?.map((hour) => hour.toJson()).toList();
     data['weekBadge'] = weekBadge;
     return data;
   }

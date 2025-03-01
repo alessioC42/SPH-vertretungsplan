@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart' show TimeOfDay;
 import 'package:html/dom.dart';
 import 'package:html/parser.dart';
+import 'package:sph_plan/applets/timetable/student/student_timetable_better_view.dart';
 import 'package:sph_plan/core/applet_parser.dart';
 import 'package:sph_plan/models/client_status_exceptions.dart';
 
@@ -22,12 +23,15 @@ class TimetableStudentParser extends AppletParser<TimeTable> {
         await getTableBody(document, timeTableType: TimeTableType.own);
     final String? weekBadge =
         document.querySelector("#aktuelleWoche")?.text.trim();
-    final parsedAll = parseRoomPlan(tbodyAll!);
-    final parsedOwn = parseRoomPlan(tbodyOwn!);
+    final List<TimetableDay> parsedAll = parseRoomPlan(tbodyAll!);
+    final List<TimetableDay>? parsedOwn = (tbodyOwn == null ? null : parseRoomPlan(tbodyOwn));
+
+    final hours = parseRows(tbodyAll);
 
     return TimeTable(
       planForAll: parsedAll,
       planForOwn: parsedOwn,
+      hours: hours,
       weekBadge: weekBadge,
     );
   }
@@ -105,6 +109,31 @@ class TimetableStudentParser extends AppletParser<TimeTable> {
     return result;
   }
 
+  List<TimeTableRow> parseRows(Element tbody) {
+    List<TimeTableRow> result = [];
+    for (var (rowIndex, rowElement) in tbody.children.indexed) {
+      if (rowIndex == 0) continue; // skip first empty row
+      for (var (colIndex, colElement) in rowElement.children.indexed) {
+        Element? e = colElement.querySelector(".VonBis");
+        Element label = colElement.querySelector(".print-show")!;
+        label = label.querySelector("b") ?? label;
+        if (e == null) break;
+        var timeString = e.text.trim();
+        var s = timeString.split(" - ");
+        var splitA = s[0].split(":");
+        var splitB = s[1].split(":");
+        result.add(TimeTableRow(
+            TimeTableRowType.lesson,
+            TimeOfDay(hour: int.parse(splitA[0]), minute: int.parse(splitA[1])),
+            TimeOfDay(hour: int.parse(splitB[0]), minute: int.parse(splitB[1])),
+            label.text.trim(),
+            rowIndex));
+        break;
+      }
+    }
+    return result;
+  }
+
   List<TimetableSubject> parseSingeHour(
       Element cell,
       int y,
@@ -137,7 +166,8 @@ class TimetableStudentParser extends AppletParser<TimeTable> {
           badge: badge,
           duration: duration,
           startTime: startTime,
-          endTime: endTime));
+          endTime: endTime,
+          stunde: y));
     }
     return result;
   }

@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:sph_plan/applets/conversations/view/shared.dart';
 import 'package:sph_plan/applets/timetable/definition.dart';
-import 'package:sph_plan/applets/timetable/student/student_timetable_view.dart';
+import 'package:sph_plan/applets/timetable/student/student_timetable_better_view.dart';
+import 'package:sph_plan/applets/timetable/student/timetable_helper.dart';
 import 'package:sph_plan/generated/l10n.dart';
 import 'package:sph_plan/models/account_types.dart';
 import 'package:sph_plan/widgets/combined_applet_builder.dart';
@@ -37,9 +38,12 @@ class _StudentTimetableSettingsState extends State<StudentTimetableSettings> {
       List<List<TimetableSubject>>? customLessons,
       int currentDay,
       {TimetableSubject? lesson}) {
-    TimeOfDay startTime =
-        TimeOfDay(hour: (TimeOfDay.now().hour - 1).clamp(0, 24), minute: 0);
-    TimeOfDay endTime = TimeOfDay(hour: TimeOfDay.now().hour, minute: 0);
+    List<TimeTableRow>? hours = currentTimetable.hours;
+    if (hours == null || hours.length <= 1) {
+      throw Exception('hours is null or too short');
+    }
+    TimeTableRow startTime = hours[0];
+    TimeTableRow endTime = hours[1];
     int selectedWeek = 0;
     List<String?> allBadges = currentTimetable.planForAll!
         .expand((day) => day.map((lesson) => lesson.badge))
@@ -50,15 +54,18 @@ class _StudentTimetableSettingsState extends State<StudentTimetableSettings> {
     final TextEditingController nameController = TextEditingController();
     final TextEditingController teacherController = TextEditingController();
     final TextEditingController roomController = TextEditingController();
+    int duration = 1;
 
     if (lesson != null) {
       nameController.text = lesson.name ?? '';
       teacherController.text = lesson.lehrer ?? '';
       roomController.text = lesson.raum ?? '';
-      startTime = lesson.startTime;
-      endTime = lesson.endTime;
+      startTime =
+          hours.firstWhere((hour) => hour.startTime == lesson.startTime);
+      endTime = hours.firstWhere((hour) => hour.endTime == lesson.endTime);
       selectedWeek =
           lesson.badge == null ? 0 : allBadges.indexOf(lesson.badge) + 1;
+      duration = lesson.duration;
     }
 
     showModalBottomSheet(
@@ -115,58 +122,44 @@ class _StudentTimetableSettingsState extends State<StudentTimetableSettings> {
                   Row(
                     spacing: 8.0,
                     children: [
-                      Expanded(
-                        child: Container(
-                          height: 56.0,
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                                color: Theme.of(context).colorScheme.outline),
-                            borderRadius: BorderRadius.circular(4.0),
-                          ),
-                          padding: EdgeInsets.symmetric(horizontal: 8.0),
-                          child: Row(
-                            spacing: 8.0,
-                            children: [
-                              Icon(Icons.access_time),
-                              Expanded(
-                                child: TextButton(
-                                  onPressed: () async {
-                                    TimeOfDay? selected = await showTimePicker(
-                                        context: context,
-                                        initialTime: startTime);
-                                    if (selected != null) {
-                                      if (selected.isAfter(endTime)) {
-                                        return;
-                                      }
-                                      setState(() {
-                                        startTime = selected;
-                                      });
-                                    }
-                                  },
-                                  child: Text(startTime.format(context)),
-                                ),
-                              ),
-                              Text('-'),
-                              Expanded(
-                                child: TextButton(
-                                  onPressed: () async {
-                                    TimeOfDay? selected = await showTimePicker(
-                                        context: context, initialTime: endTime);
-                                    if (selected != null) {
-                                      if (selected.isBefore(startTime)) {
-                                        return;
-                                      }
-                                      setState(() {
-                                        endTime = selected;
-                                      });
-                                    }
-                                  },
-                                  child: Text(endTime.format(context)),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                      DropdownMenu(
+                        width: 100,
+                        initialSelection: startTime.label,
+                        onSelected: (value) {
+                          setState(() {
+                            startTime =
+                                hours.firstWhere((hour) => hour.label == value);
+                            duration = hours.indexOf(endTime) -
+                                hours.indexOf(startTime) +
+                                1;
+                          });
+                        },
+                        dropdownMenuEntries: hours
+                            .map((hour) => DropdownMenuEntry(
+                                  value: hour.label,
+                                  label: hour.label,
+                                ))
+                            .toList(),
+                      ),
+                      Text('-'),
+                      DropdownMenu(
+                        width: 100,
+                        initialSelection: endTime.label,
+                        onSelected: (value) {
+                          setState(() {
+                            endTime =
+                                hours.firstWhere((hour) => hour.label == value);
+                            duration = hours.indexOf(endTime) -
+                                hours.indexOf(startTime) +
+                                1;
+                          });
+                        },
+                        dropdownMenuEntries: hours
+                            .map((hour) => DropdownMenuEntry(
+                                  value: hour.label,
+                                  label: hour.label,
+                                ))
+                            .toList(),
                       ),
                       if (allBadges.isNotEmpty)
                         DropdownMenu(
@@ -195,11 +188,12 @@ class _StudentTimetableSettingsState extends State<StudentTimetableSettings> {
                     ],
                   ),
                   ElevatedButton(
-                      onPressed: nameController.text.isNotEmpty
+                      onPressed: (nameController.text.isNotEmpty &&
+                              hours.indexOf(startTime) < hours.indexOf(endTime))
                           ? () {
                               TimetableSubject newLesson = TimetableSubject(
                                   id:
-                                      'custom${nameController.text.replaceAll('-', '_')}-$currentDay-${startTime.hour}-${startTime.minute}',
+                                      'custom${nameController.text.replaceAll('-', '_')}-$currentDay-${startTime.startTime.hour}-${startTime.startTime.minute}',
                                   name: nameController.text,
                                   raum: roomController.text.isEmpty
                                       ? null
@@ -208,9 +202,10 @@ class _StudentTimetableSettingsState extends State<StudentTimetableSettings> {
                                   badge: selectedWeek == 0
                                       ? null
                                       : allBadges[selectedWeek - 1],
-                                  duration: 1,
-                                  startTime: startTime,
-                                  endTime: endTime);
+                                  duration: duration,
+                                  startTime: startTime.startTime,
+                                  endTime: endTime.endTime,
+                                  stunde: hours.indexOf(startTime));
 
                               if (settings['custom-lessons'] == null) {
                                 settings['custom-lessons'] = ',,,,,,,'
