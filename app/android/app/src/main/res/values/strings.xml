@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="errorLoadingImage">Failed to load image!</string>
+    <string name="errorCapturePhoto">Capturing failed!</string>
+    <string name="errorCamera">Camera error</string>
+    <string name="errorOccurred">A error occurred</string>
+    <string name="errorInvalidImage">Invalid image!</string>
+    <string name="errorCroppingFailed">Cropping failed!</string>
+    <string name="errorCameraPermaRefused">Go to settings to allow camera access</string>
+    <string name="errorCameraRefused">Please allow camera access</string>
+    <string name="errorStoragePermaRefused">Go to settings to allow storage access</string>
+    <string name="errorStorageRefused">Please allow storage access</string>
+</resources>

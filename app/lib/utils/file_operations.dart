@@ -218,3 +218,14 @@ AlertDialog downloadDialog(BuildContext context, String? fileSize) => AlertDialo
     child: CircularProgressIndicator(),
   ),
 );
+
+Future<File> moveFile(String originPath, String targetPath) async {
+  final originFile = File.fromUri(Uri.file(originPath));
+  try {
+    return await originFile.rename(targetPath);
+  } on FileSystemException catch (_) {
+    final newFile = await originFile.copy(targetPath);
+    await originFile.delete();
+    return newFile;
+  }
+}

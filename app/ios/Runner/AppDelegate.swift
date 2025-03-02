@@ -1,29 +1,37 @@
 import UIKit
 import Flutter
-import workmanager
-import flutter_local_notifications
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
+    
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
+      let controller : FlutterViewController = window?.rootViewController as! FlutterViewController;
+      let utilsChannel = FlutterMethodChannel(name: "io.github.lanis-mobile/utils", binaryMessenger: controller.binaryMessenger);
+      let storageChannel = FlutterMethodChannel(name: "io.github.lanis-mobile/storage", binaryMessenger: controller.binaryMessenger);
+
+      utilsChannel.setMethodCallHandler({(call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
+          if (call.method == "showToastShort") {
+          } else {
+              result(FlutterMethodNotImplemented)
+          }
+      });
+      
+      storageChannel.setMethodCallHandler({(call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
+          if (call.method == "takePhoto") {
+              self.takePhotoCall(result: result)
+          } else {
+              result(FlutterMethodNotImplemented)
+          }
+      });
+      
     GeneratedPluginRegistrant.register(with: self)
-    
-    if #available(iOS 13.0, *) {
-      UNUserNotificationCenter.current().delegate = self as? UNUserNotificationCenterDelegate
-    }
-    
-    FlutterLocalNotificationsPlugin.setPluginRegistrantCallback { (registry) in
-      GeneratedPluginRegistrant.register(with: registry)
-    }
-    
-    WorkmanagerPlugin.registerTask(withIdentifier: "notificationservice")
-    
-      WorkmanagerPlugin.registerPeriodicTask(withIdentifier: "io.github.alessioc42.notificationservice", frequency: NSNumber(value: 30 * 60))
-    UIApplication.shared.setMinimumBackgroundFetchInterval(TimeInterval(30 * 60))
-    
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
+    
+    private func takePhotoCall(result: FlutterResult) {
+        
+    }
 }

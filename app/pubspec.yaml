@@ -82,6 +82,7 @@ dependencies:
     git:
       url: https://github.com/lanis-mobile/flutter_keychain_fix
       ref: 007aa23
+  pdf: ^3.11.3
 
 # flutter_tagging_plus is old and isn't being updated since a long time.
 dependency_overrides:
