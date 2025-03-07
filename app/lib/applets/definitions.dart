@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sph_plan/applets/calendar/definition.dart';
 import 'package:sph_plan/applets/conversations/definition.dart';
 import 'package:sph_plan/applets/data_storage/definition.dart';
+import 'package:sph_plan/applets/external_definitions.dart';
 import 'package:sph_plan/applets/lessons/definition.dart';
 import 'package:sph_plan/applets/study_groups/definitions.dart';
 import 'package:sph_plan/applets/substitutions/definition.dart';
@@ -52,6 +53,19 @@ class AppletDefinition {
   });
 }
 
+class ExternalDefinition {
+  final String id;
+  final StringBuildContextCallback label;
+  final Icon icon = Icon(Icons.open_in_new);
+  final Function(BuildContext?)? action;
+
+  ExternalDefinition({
+    required this.id,
+    required this.label,
+    this.action,
+  });
+}
+
 class AppDefinitions {
   static List<AppletDefinition> applets = [
     substitutionDefinition,
@@ -61,6 +75,11 @@ class AppDefinitions {
     lessonsDefinition,
     dataStorageDefinition,
     studyGroupsDefinition
+  ];
+
+  static List<ExternalDefinition> external = [
+    openLanisDefinition,
+    openMoodleDefinition,
   ];
 
   static bool isAppletSupported(AccountType accountType, String phpIdentifier) {

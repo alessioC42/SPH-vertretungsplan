@@ -54,9 +54,11 @@ class _CombinedAppletBuilderState<T> extends State<CombinedAppletBuilder<T>> {
   void initSettings() async {
     appletSettings = await sph!.prefs.kv
         .getAllApplet(widget.phpUrl, widget.settingsDefaults);
-    setState(() {
+    if (mounted) {
+      setState(() {
       _loading = false;
     });
+    }
   }
 
   @override

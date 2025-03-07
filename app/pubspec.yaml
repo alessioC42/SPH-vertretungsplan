@@ -76,6 +76,7 @@ dependencies:
   flutter_widget_from_html_core: ^0.15.2
   flutter_colorpicker: ^1.1.0
   flutter_masonry_view: ^0.0.2
+  quick_actions: ^1.1.0
 
   # TODO: Temporary migration to flutter_secure_storage. Please remove this in the future.
   flutter_keychain:

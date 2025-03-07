@@ -9,6 +9,7 @@ import 'package:simple_shadow/simple_shadow.dart';
 import 'package:sph_plan/home_page.dart';
 import 'package:sph_plan/models/client_status_exceptions.dart';
 import 'package:sph_plan/utils/authentication_state.dart';
+import 'package:sph_plan/utils/quick_actions.dart';
 import 'package:sph_plan/view/login/auth.dart';
 import 'package:sph_plan/view/login/screen.dart';
 import 'package:sph_plan/generated/l10n.dart';
@@ -58,7 +59,9 @@ class _StartupScreenState extends State<StartupScreen> with TickerProviderStateM
         await Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-              builder: (context) => HomePage()),
+              builder: (context) => HomePage(
+                key: homeKey,
+              )),
         );
         break;
 
@@ -310,6 +313,7 @@ class _StartupScreenState extends State<StartupScreen> with TickerProviderStateM
   Widget build(BuildContext context) {
     // Sets the apps context as soon as possible
     AppLocalizations.of(context);
+    QuickActionsStartUp.setNames(context);
     return MediaQuery.of(context).orientation == Orientation.portrait
         ? Column(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,

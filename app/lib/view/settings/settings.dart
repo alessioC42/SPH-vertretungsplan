@@ -12,6 +12,7 @@ import 'package:sph_plan/view/settings/subsettings/about.dart';
 import 'package:sph_plan/view/settings/subsettings/appearance.dart';
 import 'package:sph_plan/view/settings/subsettings/cache.dart';
 import 'package:sph_plan/view/settings/subsettings/notifications.dart';
+import 'package:sph_plan/view/settings/subsettings/quick_actions.dart';
 import 'package:sph_plan/view/settings/subsettings/userdata.dart';
 
 import '../../applets/calendar/calendar_export.dart';
@@ -129,6 +130,15 @@ class _SettingsScreenState extends SettingsColoursState<SettingsScreen> {
                 context,
                 MaterialPageRoute(builder: (context) => CacheSettings()),
               )),
+      SettingsTile(
+        title: (context) => AppLocalizations.of(context).quickActions,
+        subtitle: (context) async => "${AppLocalizations.of(context).applets}, ${AppLocalizations.of(context).external}",
+        icon: Icons.extension,
+        screen: (context) => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => QuickActions()),
+        ),
+      )
     ]),
     if (sph!.session.doesSupportFeature(calendarDefinition) || sph!.session.doesSupportFeature(timeTableDefinition))
       SettingsGroup(tiles: [
