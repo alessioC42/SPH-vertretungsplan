@@ -4,9 +4,15 @@ class LargeAppBar extends StatelessWidget implements PreferredSizeWidget {
   final Color? backgroundColor;
   final Text title;
   final void Function()? back;
+  final bool showBackButton; 
 
-  const LargeAppBar(
-      {super.key, required this.title, this.backgroundColor, this.back});
+  const LargeAppBar({
+    super.key, 
+    required this.title, 
+    this.backgroundColor, 
+    this.back,
+    this.showBackButton = true,
+  });
 
   @override
   Size get preferredSize => Size.fromHeight(kToolbarHeight + 88);
@@ -16,10 +22,11 @@ class LargeAppBar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       backgroundColor:
           backgroundColor ?? Theme.of(context).colorScheme.surfaceContainerHigh,
-      leading: IconButton(
+      leading: showBackButton ? IconButton(
         icon: Icon(Icons.arrow_back),
         onPressed: back ?? () => Navigator.of(context).pop(),
-      ),
+      ) : null,
+      automaticallyImplyLeading: showBackButton,
       bottom: PreferredSize(
         preferredSize: Size.fromHeight(88),
         child: Row(

@@ -7,7 +7,8 @@ import 'package:sph_plan/view/settings/settings_page_builder.dart';
 import 'package:sph_plan/generated/l10n.dart';
 
 class AppearanceSettings extends SettingsColours {
-  const AppearanceSettings({super.key});
+  final bool showBackButton;
+  const AppearanceSettings({super.key, this.showBackButton = true});
 
   @override
   State<AppearanceSettings> createState() => _AppearanceSettingsState();
@@ -32,7 +33,8 @@ class _AppearanceSettingsState
   Widget build(BuildContext context) {
     return SettingsPageWithStreamBuilder(
         backgroundColor: backgroundColor,
-        title: Text(AppLocalizations.of(context).appearance),
+        title: Text(AppLocalizations.of(context)!.appearance),
+        showBackButton: widget.showBackButton,
         subscription: accountDatabase.kv
             .subscribeMultiple(['color', 'theme', 'is-amoled']),
         builder: (context, snapshot) {

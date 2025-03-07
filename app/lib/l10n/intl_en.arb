@@ -119,6 +119,7 @@
   "privacyPolicy": "Privacy policy",
   "openSourceLicenses": "Open-Source licenses",
   "buildInformation": "Build information",
+  "notImplemented": "Not implemented",
 
   "introWelcomeTitle": "Welcome",
   "introForStudentsByStudentsTitle": "By students for students",

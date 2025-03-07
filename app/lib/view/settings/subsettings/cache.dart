@@ -10,7 +10,8 @@ import '../../../core/sph/sph.dart';
 import '../../../utils/callout.dart';
 
 class CacheSettings extends SettingsColours {
-  const CacheSettings({super.key});
+  final bool showBackButton;
+  const CacheSettings({super.key, this.showBackButton = true});
 
   static Map<String, int> dirStatSync(String dirPath) {
     int fileNum = 0;
@@ -60,8 +61,9 @@ class _CacheSettingsState extends SettingsColoursState<CacheSettings> {
   @override
   Widget build(BuildContext context) {
     return SettingsPage(
-      title: Text(AppLocalizations.of(context).clearCache),
       backgroundColor: backgroundColor,
+      title: Text(AppLocalizations.of(context)!.clearCache),
+      showBackButton: widget.showBackButton,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
       children: [
         Text(

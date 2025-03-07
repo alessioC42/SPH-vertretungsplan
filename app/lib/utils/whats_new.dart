@@ -2,16 +2,24 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:sph_plan/generated/l10n.dart';
 
 import '../core/sph/sph.dart';
 
 int compareVersions(String version1, String version2) {
-  List<int> v1 = version1.replaceFirst('v', '').split(RegExp(r'[.+]')).map(int.parse).toList();
-  List<int> v2 = version2.replaceFirst('v', '').split(RegExp(r'[.+]')).map(int.parse).toList();
+  List<int> v1 = version1
+      .replaceFirst('v', '')
+      .split(RegExp(r'[.+]'))
+      .map(int.parse)
+      .toList();
+  List<int> v2 = version2
+      .replaceFirst('v', '')
+      .split(RegExp(r'[.+]'))
+      .map(int.parse)
+      .toList();
 
   for (int i = 0; i < v1.length; i++) {
     if (v1[i] > v2[i]) return 1;
@@ -20,29 +28,37 @@ int compareVersions(String version1, String version2) {
   return 0;
 }
 
-void showLocalUpdateInfo(BuildContext context) async {
-  showDialog(
-      barrierDismissible: false,
-      context: context,
-      builder: (context) => SimpleDialog(
-    title: Text(AppLocalizations.of(context).loading),
-    children: [
-      Center(
-        child: CircularProgressIndicator(),
-      )
-    ],
-  ));
+Future<ReleaseNotesScreen?> showLocalUpdateInfo(BuildContext context,
+    {bool dialog = true}) async {
+  if (dialog) {
+    showDialog(
+        barrierDismissible: false,
+        context: context,
+        builder: (context) => SimpleDialog(
+              title: Text(AppLocalizations.of(context)!.loading),
+              children: [
+                Center(
+                  child: CircularProgressIndicator(),
+                )
+              ],
+            ));
+  }
   final deviceReleaseTag = await getDeviceReleaseTag();
   await sph!.prefs.kv.set('last-app-version', deviceReleaseTag);
   final deviceReleaseInfo = await getReleaseInfo(deviceReleaseTag);
-  if (context.mounted) Navigator.of(context).pop();
-  if (deviceReleaseInfo == null) return;
+  if (context.mounted && dialog) Navigator.of(context).pop();
+  if (deviceReleaseInfo == null) return null;
   if (context.mounted) {
-    showDialog(
-      context: context,
-      builder: (context) => ReleaseNotesScreen(deviceReleaseInfo),
-    );
+    if (dialog) {
+      showDialog(
+        context: context,
+        builder: (context) => ReleaseNotesScreen(deviceReleaseInfo),
+      );
+    } else {
+      return ReleaseNotesScreen(deviceReleaseInfo, showBack: dialog);
+    }
   }
+  return null;
 }
 
 void showUpdateInfoIfRequired(BuildContext context) async {
@@ -81,9 +97,10 @@ void showUpdateInfoIfRequired(BuildContext context) async {
     );
   }
 }
+
 Future<String> getDeviceReleaseTag() async {
   final packageInfo = await PackageInfo.fromPlatform();
-  
+
   final String currentVersion = packageInfo.version;
   final String buildNumber = packageInfo.buildNumber;
 
@@ -92,9 +109,11 @@ Future<String> getDeviceReleaseTag() async {
 
 Future<Map?> getReleaseInfo(String? releaseTag) async {
   try {
-    String url = 'https://api.github.com/repos/lanis-mobile/lanis-mobile/releases/latest';
+    String url =
+        'https://api.github.com/repos/lanis-mobile/lanis-mobile/releases/latest';
     if (releaseTag != null) {
-      url = 'https://api.github.com/repos/lanis-mobile/lanis-mobile/releases/tags/$releaseTag';
+      url =
+          'https://api.github.com/repos/lanis-mobile/lanis-mobile/releases/tags/$releaseTag';
     }
     final response = await sph!.session.dio.get(url);
     return response.data;
@@ -105,7 +124,8 @@ Future<Map?> getReleaseInfo(String? releaseTag) async {
 
 class ReleaseNotesScreen extends StatelessWidget {
   final Map releaseInfo;
-  const ReleaseNotesScreen(this.releaseInfo, {super.key});
+  final bool showBack;
+  const ReleaseNotesScreen(this.releaseInfo, {super.key, this.showBack = true});
 
   ///load contributors from markdown by searching for @username patterns
   List<String> getContributors(String markdownString) {
@@ -134,6 +154,7 @@ class ReleaseNotesScreen extends StatelessWidget {
             },
           ),
         ],
+        automaticallyImplyLeading: showBack,
       ),
       body: Column(
         children: [
@@ -154,14 +175,17 @@ class ReleaseNotesScreen extends StatelessWidget {
                   child: Text(AppLocalizations.of(context).contributors, style: Theme.of(context).textTheme.labelLarge),
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0, top: 4.0, left: 8.0, right: 8.0),
+                  padding: const EdgeInsets.only(
+                      bottom: 8.0, top: 4.0, left: 8.0, right: 8.0),
                   child: Wrap(
-                    children: getContributors(releaseInfo['body']??'').map((contributor) {
+                    children: getContributors(releaseInfo['body'] ?? '')
+                        .map((contributor) {
                       return Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8.0),
                         child: GestureDetector(
                           onTap: () {
-                            launchUrl(Uri.parse('https://github.com/$contributor'));
+                            launchUrl(
+                                Uri.parse('https://github.com/$contributor'));
                           },
                           child: ClipOval(
                             clipBehavior: Clip.antiAliasWithSaveLayer,
@@ -184,17 +208,23 @@ class ReleaseNotesScreen extends StatelessWidget {
           const SizedBox(height: 32),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.of(context).pop(),
-        icon: const Icon(Icons.done),
-        label: Text(AppLocalizations.of(context).done),
-      ),
+      floatingActionButton: showBack
+          ? FloatingActionButton.extended(
+              onPressed: () => Navigator.of(context).pop(),
+              icon: const Icon(Icons.done),
+              label: Text(AppLocalizations.of(context)!.done),
+            )
+          : null,
     );
   }
 }
 
 class NewUpdateAvailableDialog extends StatelessWidget {
-  const NewUpdateAvailableDialog({super.key, required this.deviceReleaseTag, required this.latestReleaseTag, required this.releaseInfo});
+  const NewUpdateAvailableDialog(
+      {super.key,
+      required this.deviceReleaseTag,
+      required this.latestReleaseTag,
+      required this.releaseInfo});
   final String deviceReleaseTag;
   final String latestReleaseTag;
   final Map releaseInfo;
@@ -207,9 +237,15 @@ class NewUpdateAvailableDialog extends StatelessWidget {
       content: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          Text(deviceReleaseTag, style: Theme.of(context).textTheme.bodyLarge,),
+          Text(
+            deviceReleaseTag,
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
           const Icon(Icons.arrow_forward),
-          Text(latestReleaseTag, style: Theme.of(context).textTheme.bodyLarge,),
+          Text(
+            latestReleaseTag,
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
         ],
       ),
       actions: [

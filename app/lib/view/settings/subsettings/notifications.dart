@@ -21,8 +21,9 @@ import '../../../utils/slider_tile.dart';
 
 class NotificationSettings extends SettingsColours {
   final int accountCount;
+  final bool showBackButton;
 
-  const NotificationSettings({super.key, required this.accountCount});
+  const NotificationSettings({super.key, required this.accountCount, this.showBackButton = true});
 
   @override
   State<NotificationSettings> createState() => _NotificationSettingsState();
@@ -105,6 +106,7 @@ class _NotificationSettingsState
         title: Text(
           AppLocalizations.of(context).notifications,
         ),
+        showBackButton: widget.showBackButton,
         subscription: sph!.prefs.kv.subscribeMultiple(getDatabaseKeys()),
         builder: (context, snapshot) {
           List<String> applets = snapshot.data!.keys.toList()..sort();

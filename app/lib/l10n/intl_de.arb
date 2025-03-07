@@ -119,6 +119,7 @@
   "privacyPolicy": "Datenschutzerklärung",
   "openSourceLicenses": "Open-Source Lizenzen",
   "buildInformation": "Build Informationen",
+  "notImplemented": "Nicht implementiert",
 
   "introWelcomeTitle": "Willkommen",
   "introForStudentsByStudentsTitle": "Von Schülern. Für Schüler.",
@@ -239,7 +240,7 @@
   "linkCopied": "Link wurde kopiert!",
   "feedback": "Feedback zur App \uD83D\uDC49\uD83D\uDC48",
   "inThisUpdate": "In diesem Update",
-  "showReleaseNotesForThisVersion": "Zeige die Versionshinweise für diese Version",
+  "showReleaseNotesForThisVersion": "Versionshinweise für diese Version",
   "resetAccount": "Account zurücksetzen",
   "wrongPassword": "Falsches Passwort",
   "wrongPasswordHint": "Ihr Passwort scheint falsch zu sein! Dies kann passieren, wenn Sie Ihr Passwort auf einem anderen Gerät geändert haben oder wenn Ihr Konto gelöscht wurde. Ändern Sie entweder Ihr Passwort (geben Sie hier Ihr neues Passwort ein) oder löschen Sie Ihr Konto vollständig, um dieses Problem zu beheben.",

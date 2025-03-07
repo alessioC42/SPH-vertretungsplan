@@ -8,7 +8,8 @@ import 'package:sph_plan/generated/l10n.dart';
 import '../../core/sph/sph.dart';
 
 class CalendarExport extends SettingsColours {
-  const CalendarExport({super.key});
+  final bool showBackButton;
+  const CalendarExport({super.key, this.showBackButton = true});
 
   @override
   State<CalendarExport> createState() => _CalendarExportState();
@@ -20,6 +21,7 @@ class _CalendarExportState extends SettingsColoursState<CalendarExport> {
     return SettingsPage(
         backgroundColor: backgroundColor,
         title: Text(AppLocalizations.of(context).calendarExport),
+        showBackButton: widget.showBackButton,
         children: [
           FutureBuilder(
             future: sph!.parser.calendarParser.getExports(),

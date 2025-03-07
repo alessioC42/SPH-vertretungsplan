@@ -7,6 +7,7 @@ import 'package:sph_plan/applets/timetable/definition.dart';
 import 'package:sph_plan/applets/timetable/student/student_timetable_view.dart';
 import 'package:sph_plan/generated/l10n.dart';
 import 'package:sph_plan/models/account_types.dart';
+import 'package:sph_plan/utils/large_appbar.dart';
 import 'package:sph_plan/widgets/combined_applet_builder.dart';
 
 import '../../../core/sph/sph.dart';
@@ -14,7 +15,9 @@ import '../../../models/timetable.dart';
 
 class StudentTimetableSettings extends StatefulWidget {
   final Function? openDrawerCb;
-  const StudentTimetableSettings({super.key, this.openDrawerCb});
+  final bool showBack;
+  const StudentTimetableSettings(
+      {super.key, this.openDrawerCb, this.showBack = true});
 
   @override
   State<StudentTimetableSettings> createState() =>
@@ -252,14 +255,11 @@ class _StudentTimetableSettingsState extends State<StudentTimetableSettings> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+      appBar: LargeAppBar(
         title: Text(timeTableDefinition.label(context)),
-        leading: widget.openDrawerCb != null
-            ? IconButton(
-                icon: const Icon(Icons.menu),
-                onPressed: () => widget.openDrawerCb!(),
-              )
-            : null,
+        back: () => Navigator.of(context).pop(),
+        showBackButton: widget.showBack,
+        backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
       ),
       body: CombinedAppletBuilder<TimeTable>(
         parser: sph!.parser.timetableStudentParser,

@@ -34,6 +34,7 @@ class SettingsPage extends StatelessWidget {
   final EdgeInsets contentPadding;
   final void Function()? back;
   final Widget? floatingActionButton;
+  final bool showBackButton;
 
   const SettingsPage({
     super.key,
@@ -42,7 +43,8 @@ class SettingsPage extends StatelessWidget {
     this.contentPadding = EdgeInsets.zero,
     this.back,
     required this.children,
-    this.floatingActionButton,
+    this.floatingActionButton, 
+    this.showBackButton = true,
   });
 
   @override
@@ -53,6 +55,7 @@ class SettingsPage extends StatelessWidget {
         title: title,
         backgroundColor: backgroundColor,
         back: back,
+        showBackButton: showBackButton,
       ),
       body: Padding(
         padding: contentPadding,
@@ -72,6 +75,7 @@ class SettingsPageWithRefreshIndicator extends StatelessWidget {
   final EdgeInsets contentPadding;
   final Future<void> Function() onRefresh;
   final void Function()? back;
+  final bool showBackButton;
 
   const SettingsPageWithRefreshIndicator(
       {super.key,
@@ -80,7 +84,8 @@ class SettingsPageWithRefreshIndicator extends StatelessWidget {
       this.contentPadding = EdgeInsets.zero,
       this.back,
       required this.onRefresh,
-      required this.children});
+      required this.children, 
+      this.showBackButton = true});
 
   @override
   Widget build(BuildContext context) {
@@ -90,6 +95,7 @@ class SettingsPageWithRefreshIndicator extends StatelessWidget {
         title: title,
         backgroundColor: backgroundColor,
         back: back,
+        showBackButton: showBackButton,
       ),
       body: Padding(
         padding: contentPadding,
@@ -114,6 +120,7 @@ class SettingsPageWithStreamBuilder extends StatelessWidget {
   final EdgeInsets contentPadding;
   final void Function()? back;
   final Stream<Map<String, dynamic>> subscription;
+  final bool showBackButton;
 
   const SettingsPageWithStreamBuilder(
     {super.key,
@@ -122,7 +129,8 @@ class SettingsPageWithStreamBuilder extends StatelessWidget {
     this.contentPadding = EdgeInsets.zero,
     this.back,
     required this.subscription,
-    required this.builder});
+    required this.builder,
+    this.showBackButton = true});
 
   @override
   Widget build(BuildContext context) {
@@ -132,6 +140,7 @@ class SettingsPageWithStreamBuilder extends StatelessWidget {
         title: title,
         backgroundColor: backgroundColor,
         back: back,
+        showBackButton: showBackButton,
       ),
       body: Padding(
         padding: contentPadding,

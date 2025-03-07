@@ -6,7 +6,8 @@ import 'package:sph_plan/generated/l10n.dart';
 import '../../../core/sph/sph.dart';
 
 class UserDataSettings extends SettingsColours {
-  const UserDataSettings({super.key});
+  final bool showBackButton;
+  const UserDataSettings({super.key, this.showBackButton = true});
 
   @override
   State<UserDataSettings> createState() => _UserDataSettingsState();
@@ -18,6 +19,7 @@ class _UserDataSettingsState extends SettingsColoursState<UserDataSettings> {
     return SettingsPage(
       title: Text(AppLocalizations.of(context).userData),
       backgroundColor: backgroundColor,
+      showBackButton: widget.showBackButton,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
       children: [
         for (var key in sph!.session.userData.keys)
