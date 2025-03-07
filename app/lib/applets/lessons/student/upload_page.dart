@@ -1,12 +1,10 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:http_parser/http_parser.dart'; // needed for MimeType declarations
-import 'package:mime/mime.dart';
 import 'package:open_file/open_file.dart';
+import 'package:sph_plan/utils/file_picker.dart';
 import 'package:sph_plan/widgets/error_view.dart';
 
 import '../../../core/sph/sph.dart';
@@ -293,18 +291,15 @@ class _UploadScreenState extends State<UploadScreen> {
                               style: Theme.of(context).textTheme.labelLarge,
                             ),
                             icon: const Icon(Icons.add),
+                            // TODO: Actually test this bs
                             onPressed: () async {
-                              FilePickerResult? file =
-                                  await FilePicker.platform.pickFiles(
-                                type: FileType.custom,
-                                allowedExtensions:
-                                    snapshot.data["allowed_file_types"],
-                              );
+                              final PickedFile? pickedFile = await pickSingleFile(context, snapshot.data["allowed_file_types"]);
 
-                              final PlatformFile firstFile = file!.files.first;
+                              if (pickedFile == null) {
+                                return;
+                              }
 
-                              if (!snapshot.data["allowed_file_types"].contains(
-                                  firstFile.extension?.toUpperCase())) {
+                              if (!snapshot.data["allowed_file_types"].contains(pickedFile.extension)) {
                                 showSnackbar(
                                     text:
                                         "Die Datei hat keinen erlaubten Dateityp!");
@@ -317,7 +312,7 @@ class _UploadScreenState extends State<UploadScreen> {
                                       .replaceAll(",", ".")) *
                                   1000000;
 
-                              if (firstFile.size > maxFileSize) {
+                              if ((pickedFile.size ?? 0) > maxFileSize) {
                                 showSnackbar(
                                     text:
                                         "Die Datei hat die maximale Dateigröße überschritten!");
@@ -326,7 +321,7 @@ class _UploadScreenState extends State<UploadScreen> {
 
                               // Only check for filename like Lanis.
                               for (final element in _multipartFiles) {
-                                if (element.filename == firstFile.name) {
+                                if (element.filename == pickedFile.name) {
                                   showSnackbar(
                                       text:
                                           "Der Name der Datei gibt es schon!");
@@ -335,8 +330,7 @@ class _UploadScreenState extends State<UploadScreen> {
                               }
 
                               // firstFile.extension only returns characters after the dot of the file name, not the MimeType
-                              final String? mimeType =
-                                  lookupMimeType(firstFile.path!);
+                              final String? mimeType = pickedFile.mimeType;
 
                               if (mimeType == null) {
                                 showSnackbar(
@@ -345,18 +339,11 @@ class _UploadScreenState extends State<UploadScreen> {
                                 return;
                               }
 
-                              // MultipartFile doesn't accept a String, only MediaType
-                              final MediaType parsedMimeType =
-                                  MediaType.parse(mimeType);
-
-                              final MultipartFile multipartFile =
-                                  await MultipartFile.fromFile(firstFile.path!,
-                                      filename: firstFile.name,
-                                      contentType: parsedMimeType);
+                              final MultipartFile multipartFile = await pickedFile.intoMultipart();
 
                               _multipartFiles.add(multipartFile);
                               _fileWidgets.add(ListTile(
-                                title: Text(firstFile.name),
+                                title: Text(pickedFile.name),
                                 trailing: const Icon(Icons.remove),
                                 onTap: () {
                                   // We need to calculate the index dynamically because you can remove every tile at any index.
@@ -367,7 +354,7 @@ class _UploadScreenState extends State<UploadScreen> {
                                         element.title as Text;
                                     final String text = textWidget.data!;
 
-                                    return text == firstFile.name;
+                                    return text == pickedFile.name;
                                   });
                                   _fileWidgets.removeAt(tileIndex);
                                   _multipartFiles.removeAt(tileIndex);

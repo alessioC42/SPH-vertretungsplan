@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="errorLoadingImage">Laden von Bild fehlgeschlagen!</string>
+    <string name="errorCapturePhoto">Aufnehmen fehlgeschlagen!</string>
+    <string name="errorCamera">Kamera fehler</string>
+    <string name="errorOccurred">Ein fehler ist aufgetreten</string>
+    <string name="errorInvalidImage">Ungültiges Bild!</string>
+    <string name="errorCroppingFailed">Zuschneiden fehlgeschlagen!</string>
+    <string name="errorCameraPermaRefused">Erlaube den Kamerazugriff in den Einstellungen</string>
+    <string name="errorCameraRefused">Bitte erlauben sie den Kamerazugriff</string>
+    <string name="errorStoragePermaRefused">Erlauben sie den Speicherzugriff in den Einstellungen</string>
+    <string name="errorStorageRefused">Bitte erlauben sie den Speicherzugriff</string>
+</resources>
